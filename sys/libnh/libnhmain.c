@@ -812,7 +812,7 @@ EM_JS(void, js_helpers_init, (), {
     installHelper(getPointerValue, "getPointerValue");
     installHelper(setPointerValue, "setPointerValue");
     installHelper(mapGlyphInfoHelper, "mapGlyphInfoHelper");
-
+    
     function displayInventory() {
         return _repopulate_perminvent();
     }
@@ -1065,6 +1065,31 @@ void js_constants_init() {
     SET_CONSTANT("GLYPH", GLYPH_INVISIBLE);
     SET_CONSTANT("GLYPH", GLYPH_UNEXPLORED);
     SET_CONSTANT("GLYPH", GLYPH_NOTHING);
+    SET_CONSTANT("GLYPH", NUMMONS);
+
+    /* struct permonst layout — allows JS to read mons[] fields via pointer */
+    set_const("PERMONST", "SIZEOF", sizeof(struct permonst));
+    set_const("PERMONST", "PMNAMES", offsetof(struct permonst, pmnames));
+    set_const("PERMONST", "NUM_MGENDERS", NUM_MGENDERS);
+    set_const("PERMONST", "MLET", offsetof(struct permonst, mlet));
+    set_const("PERMONST", "MLEVEL", offsetof(struct permonst, mlevel));
+    set_const("PERMONST", "MMOVE", offsetof(struct permonst, mmove));
+    set_const("PERMONST", "AC", offsetof(struct permonst, ac));
+    set_const("PERMONST", "MR", offsetof(struct permonst, mr));
+    set_const("PERMONST", "MALIGNTYP", offsetof(struct permonst, maligntyp));
+    set_const("PERMONST", "GENO", offsetof(struct permonst, geno));
+    set_const("PERMONST", "MATTK", offsetof(struct permonst, mattk));
+    set_const("PERMONST", "CWT", offsetof(struct permonst, cwt));
+    set_const("PERMONST", "CNUTRIT", offsetof(struct permonst, cnutrit));
+    set_const("PERMONST", "MSOUND", offsetof(struct permonst, msound));
+    set_const("PERMONST", "MSIZE", offsetof(struct permonst, msize));
+    set_const("PERMONST", "MRESISTS", offsetof(struct permonst, mresists));
+    set_const("PERMONST", "MCONVEYS", offsetof(struct permonst, mconveys));
+    set_const("PERMONST", "MFLAGS1", offsetof(struct permonst, mflags1));
+    set_const("PERMONST", "MFLAGS2", offsetof(struct permonst, mflags2));
+    set_const("PERMONST", "MFLAGS3", offsetof(struct permonst, mflags3));
+    set_const("PERMONST", "DIFFICULTY", offsetof(struct permonst, difficulty));
+    set_const("PERMONST", "MCOLOR", offsetof(struct permonst, mcolor));
 
     /* colors */
     SET_CONSTANT("COLORS", CLR_BLACK);
@@ -1206,6 +1231,14 @@ void js_constants_init() {
     SET_POINTER(races);
     SET_POINTER(genders);
     SET_POINTER(aligns);
+
+    /* monster data */
+    SET_POINTER(mons);
+    SET_POINTER(def_monsyms);
+
+    /* struct class_sym layout — for mlet → display character lookup */
+    set_const("CLASS_SYM", "SIZEOF", sizeof(struct class_sym));
+    set_const("CLASS_SYM", "SYM", offsetof(struct class_sym, sym));
 }
 
 /***
