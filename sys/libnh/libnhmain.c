@@ -1239,6 +1239,38 @@ void js_constants_init() {
     /* struct class_sym layout — for mlet → display character lookup */
     set_const("CLASS_SYM", "SIZEOF", sizeof(struct class_sym));
     set_const("CLASS_SYM", "SYM", offsetof(struct class_sym, sym));
+
+    /* inventory data */
+    set_const_ptr("gi.invent", (void *)&gi.invent);
+    SET_POINTER(objects);
+    SET_POINTER(obj_descr);
+
+    /* struct obj layout — for walking the inventory linked list */
+    set_const("OBJ", "SIZEOF", sizeof(struct obj));
+    set_const("OBJ", "NOBJ", offsetof(struct obj, nobj));
+    set_const("OBJ", "OTYP", offsetof(struct obj, otyp));
+    set_const("OBJ", "OWT", offsetof(struct obj, owt));
+    set_const("OBJ", "QUAN", offsetof(struct obj, quan));
+    set_const("OBJ", "SPE", offsetof(struct obj, spe));
+    set_const("OBJ", "OCLASS", offsetof(struct obj, oclass));
+    set_const("OBJ", "INVLET", offsetof(struct obj, invlet));
+    set_const("OBJ", "WHERE", offsetof(struct obj, where));
+    set_const("OBJ", "OWORNMASK", offsetof(struct obj, owornmask));
+    set_const("OBJ", "CORPSENM", offsetof(struct obj, corpsenm));
+
+    /* struct objclass layout — for looking up object type info */
+    set_const("OBJCLASS", "SIZEOF", sizeof(struct objclass));
+    set_const("OBJCLASS", "OC_NAME_IDX", offsetof(struct objclass, oc_name_idx));
+    set_const("OBJCLASS", "OC_DESCR_IDX", offsetof(struct objclass, oc_descr_idx));
+    set_const("OBJCLASS", "OC_CLASS", offsetof(struct objclass, oc_class));
+    set_const("OBJCLASS", "OC_WEIGHT", offsetof(struct objclass, oc_weight));
+    set_const("OBJCLASS", "OC_COST", offsetof(struct objclass, oc_cost));
+    set_const("OBJCLASS", "OC_NUTRITION", offsetof(struct objclass, oc_nutrition));
+
+    /* struct objdescr layout — for object name strings */
+    set_const("OBJDESCR", "SIZEOF", sizeof(struct objdescr));
+    set_const("OBJDESCR", "OC_NAME", offsetof(struct objdescr, oc_name));
+    set_const("OBJDESCR", "OC_DESCR", offsetof(struct objdescr, oc_descr));
 }
 
 /***
