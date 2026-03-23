@@ -128,7 +128,7 @@ void name fn_args { \
 VDECLCB(shim_init_nhwindows,(int *argcp, char **argv), "vpp", P2V argcp, P2V argv)
 /* 3.6: player_selection is void(void), not boolean(void) as in 3.7 */
 VDECLCB(shim_player_selection,(void), "v")
-VDECLCB(shim_askname,(void), "v")
+VDECLCB(shim_askname,(void), "vp", P2V plname)
 VDECLCB(shim_get_nh_event,(void), "v")
 VDECLCB(shim_exit_nhwindows,(const char *str), "vs", P2V str)
 VDECLCB(shim_suspend_nhwindows,(const char *str), "vs", P2V str)
