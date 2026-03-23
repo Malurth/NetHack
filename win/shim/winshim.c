@@ -115,7 +115,7 @@ void name fn_args { \
 
 VDECLCB(shim_init_nhwindows,(int *argcp, char **argv), "vpp", P2V argcp, P2V argv)
 DECLCB(boolean, shim_player_selection_cb,(void), "b")
-VDECLCB(shim_askname,(void), "v")
+VDECLCB(shim_askname,(void), "vp", P2V svp.plname)
 VDECLCB(shim_get_nh_event,(void), "v")
 VDECLCB(shim_exit_nhwindows,(const char *str), "vs", P2V str)
 VDECLCB(shim_suspend_nhwindows,(const char *str), "vs", P2V str)
