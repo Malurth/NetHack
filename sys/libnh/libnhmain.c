@@ -62,6 +62,20 @@ get_feature_color(int x, int y)
     return fgi.gm.sym.color;
 }
 
+/* Look up an extended command by name, returning its index in extcmdlist.
+ * Returns -1 if not found. Used by the API to resolve command names to
+ * the integer index that shim_get_ext_cmd expects. */
+int
+get_extcmd_index(const char *name)
+{
+    int i;
+    for (i = 0; extcmdlist[i].ef_txt; i++) {
+        if (!strcmp(extcmdlist[i].ef_txt, name))
+            return i;
+    }
+    return -1;
+}
+
 /* Return stairway/ladder direction at (x,y).
  * Returns: 0 = not stairs, 1 = stairs up, 2 = stairs down,
  *          3 = ladder up, 4 = ladder down.
