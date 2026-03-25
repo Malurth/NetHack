@@ -39,7 +39,7 @@ LFLAGS+=-s ALLOW_TABLE_GROWTH
 LFLAGS+=-s ASYNCIFY -s ASYNCIFY_IMPORTS='["local_callback"]'
 LFLAGS+=-O3
 LFLAGS+=-s MODULARIZE
-LFLAGS+=-s EXPORTED_FUNCTIONS='["_main", "_shim_graphics_set_callback", "_malloc", "_free", "_mapglyph", "_glyph_to_tile", "_doname", "_get_levl_typ", "_get_stair_direction", "_get_feature_color"]'
+LFLAGS+=-s EXPORTED_FUNCTIONS='["_main", "_shim_graphics_set_callback", "_malloc", "_free", "_mapglyph", "_glyph_to_tile", "_doname", "_get_levl_typ", "_get_stair_direction", "_get_feature_color", "_get_extcmd_index"]'
 LFLAGS+=-s EXPORTED_RUNTIME_METHODS='["cwrap", "ccall", "addFunction", "removeFunction", "UTF8ToString", "stringToUTF8", "getValue", "setValue", "ENV", "FS", "IDBFS"]'
 LFLAGS+=-s ERROR_ON_UNDEFINED_SYMBOLS=0
 # ^^^ Required: EM_JS functions (js_helpers_init, create_global, local_callback) are
