@@ -282,7 +282,7 @@ EMCC_LFLAGS += -s SUPPORT_LONGJMP=emscripten
 # with ASYNCIFY. Use the JS-based (emscripten) implementation instead.
 EMCC_LFLAGS += -O3
 EMCC_LFLAGS += -s MODULARIZE
-EMCC_LFLAGS += -s EXPORTED_FUNCTIONS='["_main", "_shim_graphics_set_callback", "_repopulate_perminvent", "_malloc", "_free", "_map_glyphinfo", "_doname"]'
+EMCC_LFLAGS += -s EXPORTED_FUNCTIONS='["_main", "_shim_graphics_set_callback", "_repopulate_perminvent", "_malloc", "_free", "_map_glyphinfo", "_doname", "_get_levl_typ", "_get_stair_direction", "_get_feature_color"]'
 EMCC_LFLAGS += -s EXPORTED_RUNTIME_METHODS='["cwrap", "ccall", "addFunction", \
 			"removeFunction", "UTF8ToString", "stringToUTF8", "getValue", \
 			"setValue", "ENV", "FS", "IDBFS"]'
