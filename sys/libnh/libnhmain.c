@@ -29,6 +29,65 @@ void js_constants_init();
 void js_globals_init();
 #endif
 
+/* Return the terrain type at (x,y) from levl[x][y].typ.
+ * Only returns values for tiles the player has seen (seenv != 0);
+ * returns -1 for unseen tiles or out-of-bounds coordinates.
+ * Exported to WASM so frontends can identify features beneath other glyphs. */
+int
+get_levl_typ(x, y)
+int x, y;
+{
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return -1;
+    if (levl[x][y].seenv == 0)
+        return -1;
+    return (int)levl[x][y].typ;
+}
+
+/* Return the display color for the terrain at (x,y).
+ * Uses back_to_glyph + mapglyph to get the exact same color
+ * that print_glyph would use. Returns -1 if invalid. */
+int
+get_feature_color(x, y)
+int x, y;
+{
+    int glyph, ch, color;
+    unsigned special;
+    boolean saved;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return -1;
+    /* Temporarily force use_color so mapglyph returns real colors
+     * even if the window port hasn't initialized color mode yet. */
+    saved = iflags.use_color;
+    iflags.use_color = TRUE;
+    glyph = back_to_glyph(x, y);
+    mapglyph(glyph, &ch, &color, &special, x, y, 0);
+    iflags.use_color = saved;
+    return color;
+}
+
+/* Return stairway/ladder direction at (x,y).
+ * Returns: 0 = not stairs, 1 = stairs up, 2 = stairs down,
+ *          3 = ladder up, 4 = ladder down.
+ * 3.6.7 uses separate globals for up/down stairs and ladders. */
+int
+get_stair_direction(x, y)
+int x, y;
+{
+    if (x == xupstair && y == yupstair)
+        return 1;
+    if (x == xdnstair && y == ydnstair)
+        return 2;
+    if (x == xupladder && y == yupladder)
+        return 3;
+    if (x == xdnladder && y == ydnladder)
+        return 4;
+    /* sstairs (special stairs, e.g. quest portal) */
+    if (x == sstairs.sx && y == sstairs.sy)
+        return sstairs.up ? 1 : 2;
+    return 0;
+}
+
 #if !defined(_BULL_SOURCE) && !defined(__sgi) && !defined(_M_UNIX)
 #if !defined(SUNOS4) && !(defined(ULTRIX) && defined(__GNUC__))
 #if defined(POSIX_TYPES) || defined(SVR4) || defined(HPUX)
@@ -1023,6 +1082,20 @@ void js_constants_init() {
     set_const("OBJDESCR", "SIZEOF", sizeof(struct objdescr));
     set_const("OBJDESCR", "OC_NAME", offsetof(struct objdescr, oc_name));
     set_const("OBJDESCR", "OC_DESCR", offsetof(struct objdescr, oc_descr));
+
+    /* terrain type constants from levl[x][y].typ (rm.h) */
+    SET_CONSTANT("LEVL_TYP", STAIRS)
+    SET_CONSTANT("LEVL_TYP", FOUNTAIN)
+    SET_CONSTANT("LEVL_TYP", THRONE)
+    SET_CONSTANT("LEVL_TYP", SINK)
+    SET_CONSTANT("LEVL_TYP", GRAVE)
+    SET_CONSTANT("LEVL_TYP", ALTAR)
+    SET_CONSTANT("LEVL_TYP", POOL)
+    SET_CONSTANT("LEVL_TYP", MOAT)
+    SET_CONSTANT("LEVL_TYP", LAVAPOOL)
+    SET_CONSTANT("LEVL_TYP", IRONBARS)
+    SET_CONSTANT("LEVL_TYP", TREE)
+    SET_CONSTANT("LEVL_TYP", ICE)
 }
 
 /***
