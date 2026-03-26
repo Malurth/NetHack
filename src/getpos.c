@@ -765,6 +765,8 @@ getpos_refresh(void)
     }
 }
 
+extern int in_getpos;
+
 /* have the player use movement keystrokes to position the cursor at a
    particular map location, then use one of [.,:;] to pick the spot */
 int
@@ -810,6 +812,8 @@ getpos(coord *ccp, boolean force, const char *goal)
     int dx, dy;
     boolean rushrun = FALSE;
 
+    in_getpos = 1;
+
     /* temporary? if we have a queued direction, return the adjacent spot
        in that direction */
     if (!gi.in_doagain) {
@@ -823,6 +827,7 @@ getpos(coord *ccp, boolean force, const char *goal)
                 cmdq_clear(CQ_CANNED);
                 result = -1;
             }
+            in_getpos = 0;
             return result;
         }
     }
@@ -1163,6 +1168,7 @@ getpos(coord *ccp, boolean force, const char *goal)
             free((genericptr_t) garr[i]);
     getpos_sethilite(NULL, NULL);
     u.dx = udx, u.dy = udy, u.dz = udz;
+    in_getpos = 0;
     return result;
 }
 

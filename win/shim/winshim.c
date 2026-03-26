@@ -144,7 +144,30 @@ VDECLCB(shim_print_glyph,(winid w, coordxy x, coordxy y, const glyph_info *glyph
 VDECLCB(shim_raw_print,(const char *str), "vs", P2V str)
 VDECLCB(shim_raw_print_bold,(const char *str), "vs", P2V str)
 DECLCB(int, shim_nhgetch,(void), "i")
-DECLCB(int, shim_nh_poskey,(coordxy *x, coordxy *y, int *mod), "ippp", P2V x, P2V y, P2V mod)
+
+/* Hand-written wrapper for shim_nh_poskey instead of DECLCB macro.
+ * When nh_poskey suspends via Asyncify, the C stack is saved and restored
+ * on resume, which overwrites any values JS wrote to the stack-allocated
+ * out-pointers (x, y, mod). We work around this by having JS write click
+ * coordinates to global memory (poskey_click_*), then copying them to the
+ * out-pointers here after the callback returns. */
+int shim_nh_poskey(coordxy *x, coordxy *y, int *mod);
+
+int shim_nh_poskey(coordxy *x, coordxy *y, int *mod) {
+    extern int poskey_click_x, poskey_click_y, poskey_click_mod;
+    void *args[] = { P2V x, P2V y, P2V mod };
+    int ret = 0;
+    debugf("SHIM GRAPHICS: shim_nh_poskey\n");
+    if (!shim_callback_name) return ret;
+    local_callback(shim_callback_name, "shim_nh_poskey", (void *)&ret, "ippp", args);
+    debugf("SHIM GRAPHICS: shim_nh_poskey done.\n");
+    if (ret == 0) {
+        *x = poskey_click_x;
+        *y = poskey_click_y;
+        *mod = poskey_click_mod;
+    }
+    return ret;
+}
 VDECLCB(shim_nhbell,(void), "v")
 DECLCB(int, shim_doprev_message,(void),"iv")
 DECLCB(char, shim_yn_function,(const char *query, const char *resp, char def), "css0", P2V query, P2V resp, A2P def)

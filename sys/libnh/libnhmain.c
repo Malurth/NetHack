@@ -24,6 +24,65 @@ void js_constants_init();
 void js_globals_init();
 #endif
 
+/* Track whether the game is in position selection mode (getpos).
+ * Set to 1 at getpos() entry, cleared at exit.
+ * We use a dedicated flag rather than program_state.input_state because
+ * Asyncify may unwind the stack before we can read input_state from JS. */
+int in_getpos = 0;
+
+/* Global click coordinate buffer for nh_poskey position input.
+ * Asyncify saves/restores the C stack on suspend/resume, which means
+ * writing to stack-allocated out-pointers from JS (via setValue) gets
+ * overwritten when the stack is restored. These globals survive the
+ * rewind. The JS callbackRouter writes click coordinates here, and
+ * readchar_core copies them to the out-pointers after nh_poskey returns. */
+int poskey_click_x = 0;
+int poskey_click_y = 0;
+int poskey_click_mod = 0;
+
+/* Return pointers to the click coordinate globals so JS can write to them. */
+int *
+get_poskey_click_x_ptr(void)
+{
+    return &poskey_click_x;
+}
+
+int *
+get_poskey_click_y_ptr(void)
+{
+    return &poskey_click_y;
+}
+
+int *
+get_poskey_click_mod_ptr(void)
+{
+    return &poskey_click_mod;
+}
+
+/* Return the current input state.
+ * Returns 2 when in position selection mode (farlook, targeting, etc.),
+ * 0 otherwise. Values match the InputState enum. */
+int
+get_input_state(void)
+{
+    return in_getpos ? 2 : 0;
+}
+
+/* Return the player's actual map coordinates (u.ux, u.uy).
+ * Unlike the cursor position, these are always the player's true location
+ * even during farlook or targeting. */
+int
+get_player_x(void)
+{
+    return u.ux;
+}
+
+int
+get_player_y(void)
+{
+    return u.uy;
+}
+
 /* Return the terrain type at (x,y) from levl[x][y].typ.
  * Only returns values for tiles the player has seen (seenv != 0);
  * returns -1 for unseen tiles or out-of-bounds coordinates.
@@ -60,6 +119,33 @@ get_feature_color(int x, int y)
     iflags.use_color = prev_use_color;
     reset_glyphmap(gm_optionchange);
     return fgi.gm.sym.color;
+}
+
+/* Return the clean screen description for position (x,y).
+ * Calls do_screen_description() and returns the firstmatch string —
+ * the same unambiguous description that auto_describe() displays.
+ * Returns empty string for invalid coordinates or no description. */
+const char *
+get_screen_description(int x, int y)
+{
+    static char result_buf[BUFSZ];
+    coord cc;
+    int sym = 0;
+    char tmpbuf[BUFSZ];
+    const char *firstmatch = "unknown";
+
+    result_buf[0] = '\0';
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return result_buf;
+
+    cc.x = x;
+    cc.y = y;
+    if (do_screen_description(cc, TRUE, sym, tmpbuf, &firstmatch,
+                              (struct permonst **) 0)) {
+        strncpy(result_buf, firstmatch, BUFSZ - 1);
+        result_buf[BUFSZ - 1] = '\0';
+    }
+    return result_buf;
 }
 
 /* Look up an extended command by name, returning its index in extcmdlist.
