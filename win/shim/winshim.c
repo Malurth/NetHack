@@ -160,8 +160,35 @@ VDECLCB(shim_print_glyph,(winid w, XCHAR_P x, XCHAR_P y, int glyph, int bkglyph)
 VDECLCB(shim_raw_print,(const char *str), "vs", P2V str)
 VDECLCB(shim_raw_print_bold,(const char *str), "vs", P2V str)
 DECLCB(int, shim_nhgetch,(void), "i")
-/* 3.6: nh_poskey uses int* (not coordxy*) */
-DECLCB(int, shim_nh_poskey,(int *x, int *y, int *mod), "ippp", P2V x, P2V y, P2V mod)
+
+/* Hand-written wrapper for shim_nh_poskey instead of DECLCB macro.
+ * When nh_poskey suspends via Asyncify (WASM only), the C stack is saved
+ * and restored on resume, which overwrites any values JS wrote to the
+ * stack-allocated out-pointers (x, y, mod). We work around this by having
+ * JS write click coordinates to global memory (poskey_click_*), then
+ * copying them to the out-pointers here after the callback returns. */
+int shim_nh_poskey(int *x, int *y, int *mod);
+
+int shim_nh_poskey(int *x, int *y, int *mod) {
+    void *args[] = { P2V x, P2V y, P2V mod };
+    int ret = 0;
+    debugf("SHIM GRAPHICS: shim_nh_poskey\n");
+#ifdef __EMSCRIPTEN__
+    if (!shim_callback_name) return ret;
+    local_callback(shim_callback_name, "shim_nh_poskey", (void *)&ret, "ippp", args);
+    if (ret == 0) {
+        extern int poskey_click_x, poskey_click_y, poskey_click_mod;
+        *x = poskey_click_x;
+        *y = poskey_click_y;
+        *mod = poskey_click_mod;
+    }
+#else
+    if (!shim_graphics_callback) return ret;
+    shim_graphics_callback("shim_nh_poskey", (void *)&ret, "ippp", x, y, mod);
+#endif
+    debugf("SHIM GRAPHICS: shim_nh_poskey done.\n");
+    return ret;
+}
 VDECLCB(shim_nhbell,(void), "v")
 DECLCB(int, shim_doprev_message,(void),"iv")
 DECLCB(char, shim_yn_function,(const char *query, const char *resp, CHAR_P def), "css0", P2V query, P2V resp, A2P def)

@@ -625,6 +625,8 @@ int gloc;
     return (pick_cnt > 0);
 }
 
+extern int in_getpos;
+
 int
 getpos(ccp, force, goal)
 coord *ccp;
@@ -632,6 +634,7 @@ boolean force;
 const char *goal;
 {
     const char *cp;
+    in_getpos = 1;
     static struct {
         int nhkf, ret;
     } const pick_chars_def[] = {
@@ -983,6 +986,7 @@ const char *goal;
             free((genericptr_t) garr[i]);
     getpos_hilitefunc = (void FDECL((*), (int))) 0;
     getpos_getvalid = (boolean FDECL((*), (int, int))) 0;
+    in_getpos = 0;
     return result;
 }
 
