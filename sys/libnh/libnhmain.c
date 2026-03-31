@@ -40,6 +40,19 @@ int poskey_click_x = 0;
 int poskey_click_y = 0;
 int poskey_click_mod = 0;
 
+/* Global select_menu pick_list buffer — same Asyncify workaround as poskey.
+ * JS allocates the MENU_ITEM_P array on the WASM heap (via _malloc) and
+ * writes the pointer here. shim_select_menu copies it to the C caller's
+ * *menu_list out-pointer after Asyncify resumes and the stack is restored. */
+MENU_ITEM_P *select_menu_pick_list = NULL;
+
+/* Return pointer to the global so JS can write to it via setValue. */
+MENU_ITEM_P **
+get_select_menu_pick_list_ptr(void)
+{
+    return &select_menu_pick_list;
+}
+
 /* Return pointers to the click coordinate globals so JS can write to them. */
 int *
 get_poskey_click_x_ptr(void)
