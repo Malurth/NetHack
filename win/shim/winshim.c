@@ -148,8 +148,33 @@ VDECLCB(shim_add_menu,
     "viip00isb",
     A2P window, A2P glyph, P2V identifier, A2P ch, A2P gch, A2P attr, P2V str, A2P preselected)
 VDECLCB(shim_end_menu,(winid window, const char *prompt), "vis", A2P window, P2V prompt)
-/* XXX: shim_select_menu menu_list is an output */
+/* shim_select_menu — manually implemented for WASM (not via DECLCB) because
+ * menu_list is an output pointer that lives on the C stack. Asyncify
+ * restores the stack on resume, overwriting any values JS wrote during
+ * suspension. We use the same global-buffer pattern as nh_poskey:
+ * JS writes the pick_list to select_menu_pick_list (a global), and
+ * we copy it to *menu_list here after the callback returns. */
+#ifdef __EMSCRIPTEN__
+int shim_select_menu(winid window, int how, MENU_ITEM_P **menu_list);
+
+int shim_select_menu(winid window, int how, MENU_ITEM_P **menu_list) {
+    extern MENU_ITEM_P *select_menu_pick_list;
+    void *args[] = { A2P window, A2P how, P2V menu_list };
+    int ret = 0;
+    select_menu_pick_list = NULL;
+    debugf("SHIM GRAPHICS: shim_select_menu\n");
+    if (!shim_callback_name) return ret;
+    local_callback(shim_callback_name, "shim_select_menu", (void *)&ret, "iiip", args);
+    debugf("SHIM GRAPHICS: shim_select_menu done.\n");
+    if (ret > 0 && select_menu_pick_list) {
+        *menu_list = select_menu_pick_list;
+        select_menu_pick_list = NULL;
+    }
+    return ret;
+}
+#else
 DECLCB(int, shim_select_menu,(winid window, int how, MENU_ITEM_P **menu_list), "iiip", A2P window, A2P how, P2V menu_list)
+#endif
 DECLCB(char, shim_message_menu,(CHAR_P let, int how, const char *mesg), "ciis", A2P let, A2P how, P2V mesg)
 VDECLCB(shim_mark_synch,(void), "v")
 VDECLCB(shim_wait_synch,(void), "v")

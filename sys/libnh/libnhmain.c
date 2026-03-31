@@ -40,6 +40,18 @@ int poskey_click_x = 0;
 int poskey_click_y = 0;
 int poskey_click_mod = 0;
 
+/* Global pick_list buffer for shim_select_menu.
+ * Same Asyncify workaround as poskey_click — JS writes the MENU_ITEM_P
+ * array pointer here, and shim_select_menu copies it to *menu_list
+ * after the callback returns and the stack is restored. */
+MENU_ITEM_P *select_menu_pick_list = NULL;
+
+MENU_ITEM_P **
+get_select_menu_pick_list_ptr(void)
+{
+    return &select_menu_pick_list;
+}
+
 int *
 get_poskey_click_x_ptr()
 {
