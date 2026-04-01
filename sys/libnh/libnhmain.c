@@ -159,6 +159,23 @@ int x, y;
     return result_buf;
 }
 
+/* Return the given name of the monster at (x,y), or empty string if none.
+ * This is the player-assigned or role-default name (e.g. "Idefix"),
+ * not the species name. Works for pets, named monsters, etc.
+ * Exported to WASM so frontends can display named creatures. */
+const char *
+get_monster_givenname(x, y)
+int x, y;
+{
+    struct monst *mon;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return "";
+    mon = m_at(x, y);
+    if (mon && has_mname(mon))
+        return MNAME(mon);
+    return "";
+}
+
 /* Look up an extended command by name, returning its index in extcmdlist.
  * Returns -1 if not found. */
 int
