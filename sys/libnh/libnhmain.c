@@ -161,6 +161,22 @@ get_screen_description(int x, int y)
     return result_buf;
 }
 
+/* Return the given name of the monster at (x,y), or empty string if none.
+ * This is the player-assigned or role-default name (e.g. "Idefix"),
+ * not the species name. Works for pets, named monsters, etc.
+ * Exported to WASM so frontends can display named creatures. */
+const char *
+get_monster_givenname(int x, int y)
+{
+    struct monst *mon;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return "";
+    mon = m_at(x, y);
+    if (mon && has_mgivenname(mon))
+        return MGIVENNAME(mon);
+    return "";
+}
+
 /* Look up an extended command by name, returning its index in extcmdlist.
  * Returns -1 if not found. Used by the API to resolve command names to
  * the integer index that shim_get_ext_cmd expects. */
