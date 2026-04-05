@@ -94,6 +94,47 @@ get_player_y()
     return u.uy;
 }
 
+/* Return the vision flags at (x,y) from the viz_array.
+ * Bit 0 (COULD_SEE=0x1): has line-of-sight if it were lit.
+ * Bit 1 (IN_SIGHT=0x2): actually visible (lit + LOS).
+ * Bit 2 (TEMP_LIT=0x4): temporarily illuminated.
+ * Returns 0 for out-of-bounds. */
+int
+get_vision_at(x, y)
+int x, y;
+{
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return 0;
+    return (int)viz_array[y][x];
+}
+
+/* Return whether the tile at (x,y) is in a lit room.
+ * Returns: 1 = lit, 0 = dark, -1 = out-of-bounds or unseen. */
+int
+get_levl_lit(x, y)
+int x, y;
+{
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return -1;
+    if (levl[x][y].seenv == 0)
+        return -1;
+    return levl[x][y].lit ? 1 : 0;
+}
+
+/* Return the room number at (x,y) from levl[x][y].roomno.
+ * Returns -1 for out-of-bounds or unseen tiles.
+ * Room numbers 0-63; corridors and non-rooms are typically 0. */
+int
+get_levl_roomno(x, y)
+int x, y;
+{
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return -1;
+    if (levl[x][y].seenv == 0)
+        return -1;
+    return (int)levl[x][y].roomno;
+}
+
 /* Return the terrain type at (x,y) from levl[x][y].typ.
  * Only returns values for tiles the player has seen (seenv != 0);
  * returns -1 for unseen tiles or out-of-bounds coordinates.
