@@ -1237,6 +1237,7 @@ void js_globals_init() {
 
     /* globals — 3.6 uses direct globals (no svp./gh. prefix) */
     CREATE_GLOBAL(plname, "s");
+    CREATE_GLOBAL(pl_character, "s");
 
     /* window globals */
     CREATE_GLOBAL(WIN_MAP, "i");
