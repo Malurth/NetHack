@@ -1490,6 +1490,7 @@ void js_globals_init() {
 
     /* globals */
     CREATE_GLOBAL(svp.plname, "s");
+    CREATE_GLOBAL(svp.pl_character, "s");
 
     /* window globals */
     CREATE_GLOBAL(WIN_MAP, "i");
