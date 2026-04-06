@@ -1493,6 +1493,14 @@ void js_constants_init() {
     set_const("OBJDESCR", "OC_DESCR", offsetof(struct objdescr, oc_descr));
 
     /* terrain type constants from levl[x][y].typ (rm.h) */
+    SET_CONSTANT("LEVL_TYP", STONE)
+    SET_CONSTANT("LEVL_TYP", VWALL)
+    SET_CONSTANT("LEVL_TYP", HWALL)
+    SET_CONSTANT("LEVL_TYP", SDOOR)
+    SET_CONSTANT("LEVL_TYP", SCORR)
+    SET_CONSTANT("LEVL_TYP", DOOR)
+    SET_CONSTANT("LEVL_TYP", CORR)
+    SET_CONSTANT("LEVL_TYP", ROOM)
     SET_CONSTANT("LEVL_TYP", STAIRS)
     SET_CONSTANT("LEVL_TYP", LADDER)
     SET_CONSTANT("LEVL_TYP", FOUNTAIN)
