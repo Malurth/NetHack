@@ -282,7 +282,7 @@ EMCC_LFLAGS += -s SUPPORT_LONGJMP=emscripten
 # with ASYNCIFY. Use the JS-based (emscripten) implementation instead.
 EMCC_LFLAGS += -O3
 EMCC_LFLAGS += -s MODULARIZE
-EMCC_LFLAGS += -s EXPORTED_FUNCTIONS='["_main", "_shim_graphics_set_callback", "_repopulate_perminvent", "_malloc", "_free", "_map_glyphinfo", "_doname", "_get_levl_typ", "_get_stair_direction", "_get_feature_color", "_get_extcmd_index", "_get_player_x", "_get_player_y", "_get_input_state", "_get_poskey_click_x_ptr", "_get_poskey_click_y_ptr", "_get_poskey_click_mod_ptr", "_get_select_menu_pick_list_ptr", "_get_screen_description", "_get_monster_givenname", "_get_vision_at", "_get_levl_lit", "_get_levl_roomno", "_get_terrain_map"]'
+EMCC_LFLAGS += -s EXPORTED_FUNCTIONS='["_main", "_shim_graphics_set_callback", "_repopulate_perminvent", "_malloc", "_free", "_map_glyphinfo", "_doname", "_get_levl_typ", "_get_stair_direction", "_get_feature_color", "_get_extcmd_index", "_get_player_x", "_get_player_y", "_get_input_state", "_get_poskey_click_x_ptr", "_get_poskey_click_y_ptr", "_get_poskey_click_mod_ptr", "_get_select_menu_pick_list_ptr", "_get_screen_description", "_get_monster_givenname", "_get_vision_at", "_get_levl_lit", "_get_levl_roomno", "_get_terrain_map", "_get_terrain_description"]'
 EMCC_LFLAGS += -s EXPORTED_RUNTIME_METHODS='["cwrap", "ccall", "addFunction", \
 			"removeFunction", "UTF8ToString", "stringToUTF8", "getValue", \
 			"setValue", "HEAPU8", "ENV", "FS", "IDBFS"]'
