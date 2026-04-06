@@ -253,6 +253,32 @@ int x, y;
     return result_buf;
 }
 
+/* Return a terrain-only description for (x,y) — ignores any monster or
+ * object standing on the tile. Wraps dfeature_at(), which inspects
+ * levl[x][y].typ and doormask directly, so you get e.g. "closed door",
+ * "open door", "doorway", "broken door", "fountain", "altar to <god>",
+ * "staircase down", etc. Returns empty string if the tile has no
+ * notable dungeon feature (plain floor/wall/etc). */
+const char *
+get_terrain_description(x, y)
+int x, y;
+{
+    static char result_buf[BUFSZ];
+    char tmpbuf[BUFSZ];
+    const char *desc;
+
+    result_buf[0] = '\0';
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return result_buf;
+
+    desc = dfeature_at(x, y, tmpbuf);
+    if (desc) {
+        strncpy(result_buf, desc, BUFSZ - 1);
+        result_buf[BUFSZ - 1] = '\0';
+    }
+    return result_buf;
+}
+
 /* Return the given name of the monster at (x,y), or empty string if none.
  * This is the player-assigned or role-default name (e.g. "Idefix"),
  * not the species name. Works for pets, named monsters, etc.
