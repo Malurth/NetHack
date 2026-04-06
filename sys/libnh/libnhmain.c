@@ -172,6 +172,71 @@ get_feature_color(int x, int y)
     return fgi.gm.sym.color;
 }
 
+/* Fill the provided buffer with rich terrain data for every map tile.
+ * Buffer must be at least COLNO * ROWNO * 5 bytes. Layout is row-major,
+ * 5 bytes per tile (one struct per (x, y)):
+ *   [0] char    — display glyph (back_to_glyph + map_glyphinfo)
+ *   [1] color   — NetHack color enum (0-15)
+ *   [2] typ     — terrain enum from levl[x][y].typ (e.g. ROOM, DOOR, FOUNTAIN)
+ *   [3] vision  — vision flags from gv.viz_array[y][x] (COULD_SEE|IN_SIGHT|TEMP_LIT)
+ *   [4] flags   — bit 0 = lit (1=lit, 0=dark), bits 1-7 = roomno (0-63)
+ *
+ * Index of tile (x, y) is `(y * COLNO + x) * 5`.
+ *
+ * Char/color come from the BACKGROUND glyph (back_to_glyph) — no
+ * monsters/items/effects on top. For unseen tiles (seenv == 0), writes
+ * (' ', 0, 0, vision, 0) — the vision byte still reflects current LOS state.
+ *
+ * Replaces multiple per-tile FFI calls (get_levl_typ, get_vision_at,
+ * get_levl_lit, get_levl_roomno, get_feature_color) with one bulk call. */
+void
+get_terrain_map(unsigned char *out_buffer)
+{
+    glyph_info ginfo = nul_glyphinfo;
+    int g;
+    int x, y, idx;
+    unsigned char vision;
+    boolean prev_use_color;
+
+    if (!out_buffer)
+        return;
+
+    /* Match get_feature_color: force use_color and rebuild glyphmap so
+     * map_glyphinfo returns the correct ttychar and color. */
+    prev_use_color = iflags.use_color;
+    iflags.use_color = TRUE;
+    reset_glyphmap(gm_optionchange);
+
+    for (y = 0; y < ROWNO; y++) {
+        for (x = 0; x < COLNO; x++) {
+            idx = (y * COLNO + x) * 5;
+            vision = (unsigned char)(gv.viz_array[y][x] & 0xFF);
+            if (levl[x][y].seenv == 0) {
+                out_buffer[idx]     = ' ';
+                out_buffer[idx + 1] = 0;
+                out_buffer[idx + 2] = 0;
+                out_buffer[idx + 3] = vision;
+                out_buffer[idx + 4] = 0;
+            } else {
+                g = back_to_glyph(x, y);
+                map_glyphinfo(x, y, g, 0, &ginfo);
+                out_buffer[idx]     = (unsigned char)(ginfo.ttychar & 0xFF);
+                out_buffer[idx + 1] = (unsigned char)(ginfo.gm.sym.color & 0xFF);
+                out_buffer[idx + 2] = (unsigned char)(levl[x][y].typ & 0xFF);
+                out_buffer[idx + 3] = vision;
+                /* bit 0 = lit, bits 1-7 = roomno (0-63) */
+                out_buffer[idx + 4] = (unsigned char)(
+                    (levl[x][y].lit ? 1 : 0) |
+                    ((levl[x][y].roomno & 0x7F) << 1)
+                );
+            }
+        }
+    }
+
+    iflags.use_color = prev_use_color;
+    reset_glyphmap(gm_optionchange);
+}
+
 /* Return the clean screen description for position (x,y).
  * Calls do_screen_description() and returns the firstmatch string —
  * the same unambiguous description that auto_describe() displays.
