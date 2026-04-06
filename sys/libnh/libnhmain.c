@@ -172,6 +172,59 @@ int x, y;
     return color;
 }
 
+/* Fill the provided buffer with rich terrain data for every map tile.
+ * Buffer must be at least COLNO * ROWNO * 5 bytes. Layout is row-major,
+ * 5 bytes per tile:
+ *   [0] char    — display glyph (back_to_glyph + mapglyph)
+ *   [1] color   — NetHack color enum (0-15)
+ *   [2] typ     — terrain enum from levl[x][y].typ
+ *   [3] vision  — vision flags from viz_array[y][x] (COULD_SEE|IN_SIGHT|TEMP_LIT)
+ *   [4] flags   — bit 0 = lit, bits 1-7 = roomno (0-63)
+ *
+ * Index of tile (x, y) is `(y * COLNO + x) * 5`. */
+void
+get_terrain_map(out_buffer)
+unsigned char *out_buffer;
+{
+    int g, ch, color, x, y, idx;
+    unsigned special;
+    unsigned char vision;
+    boolean saved;
+
+    if (!out_buffer)
+        return;
+
+    saved = iflags.use_color;
+    iflags.use_color = TRUE;
+
+    for (y = 0; y < ROWNO; y++) {
+        for (x = 0; x < COLNO; x++) {
+            idx = (y * COLNO + x) * 5;
+            vision = (unsigned char)(viz_array[y][x] & 0xFF);
+            if (levl[x][y].seenv == 0) {
+                out_buffer[idx]     = ' ';
+                out_buffer[idx + 1] = 0;
+                out_buffer[idx + 2] = 0;
+                out_buffer[idx + 3] = vision;
+                out_buffer[idx + 4] = 0;
+            } else {
+                g = back_to_glyph(x, y);
+                mapglyph(g, &ch, &color, &special, x, y, 0);
+                out_buffer[idx]     = (unsigned char)(ch & 0xFF);
+                out_buffer[idx + 1] = (unsigned char)(color & 0xFF);
+                out_buffer[idx + 2] = (unsigned char)(levl[x][y].typ & 0xFF);
+                out_buffer[idx + 3] = vision;
+                out_buffer[idx + 4] = (unsigned char)(
+                    (levl[x][y].lit ? 1 : 0) |
+                    ((levl[x][y].roomno & 0x7F) << 1)
+                );
+            }
+        }
+    }
+
+    iflags.use_color = saved;
+}
+
 /* Return the clean screen description for position (x,y).
  * Calls do_screen_description() and returns the firstmatch string —
  * the same unambiguous description that auto_describe() displays.
