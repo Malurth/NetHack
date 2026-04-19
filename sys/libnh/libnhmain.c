@@ -350,6 +350,50 @@ get_uprops_count(void)
     return LAST_PROP + 1;
 }
 
+/* Return a comma-separated string of monster types/species that the
+ * player is currently warned about via WARN_OF_MON.  Decodes M2 flags
+ * from context.warntype.obj (artifact sources) and .polyd (polymorph
+ * sources), plus the specific species (if any).  Returns "" when no
+ * warn-of-mon sources are active. */
+const char *
+get_warntype_text(void)
+{
+    static char buf[BUFSZ];
+    buf[0] = '\0';
+
+    unsigned long combined = svc.context.warntype.obj
+                           | svc.context.warntype.polyd;
+
+    /* Decode M2 race/type flags into readable names */
+    struct { unsigned long flag; const char *name; } m2names[] = {
+        { M2_UNDEAD, "undead" },
+        { M2_WERE,   "lycanthropes" },
+        { M2_HUMAN,  "humans" },
+        { M2_ELF,    "elves" },
+        { M2_DWARF,  "dwarves" },
+        { M2_GNOME,  "gnomes" },
+        { M2_ORC,    "orcs" },
+        { M2_DEMON,  "demons" },
+        { M2_GIANT,  "giants" },
+    };
+
+    int i;
+    for (i = 0; i < (int)(sizeof m2names / sizeof m2names[0]); i++) {
+        if (combined & m2names[i].flag) {
+            if (*buf) Strcat(buf, ",");
+            Strcat(buf, m2names[i].name);
+        }
+    }
+
+    /* Specific species from polymorph (e.g. purple worm warns of shriekers) */
+    if (ismnum(svc.context.warntype.speciesidx)) {
+        if (*buf) Strcat(buf, ",");
+        Strcat(buf, mons[svc.context.warntype.speciesidx].pmnames[NEUTRAL]);
+    }
+
+    return buf;
+}
+
 #if !defined(_BULL_SOURCE) && !defined(__sgi) && !defined(_M_UNIX)
 #if !defined(SUNOS4) && !(defined(ULTRIX) && defined(__GNUC__))
 #if defined(POSIX_TYPES) || defined(SVR4) || defined(HPUX)
