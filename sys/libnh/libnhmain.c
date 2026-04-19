@@ -332,6 +332,22 @@ int x, y;
     return 0;
 }
 
+/* Return pointer to player's properties array u.uprops[].
+ * Each element is a struct prop { long extrinsic, blocked, intrinsic }.
+ * Frontends walk the array using PROP indices from js_constants_init. */
+struct prop *
+get_uprops_ptr()
+{
+    return u.uprops;
+}
+
+/* Return the number of properties (LAST_PROP + 1). */
+int
+get_uprops_count()
+{
+    return LAST_PROP + 1;
+}
+
 #if !defined(_BULL_SOURCE) && !defined(__sgi) && !defined(_M_UNIX)
 #if !defined(SUNOS4) && !(defined(ULTRIX) && defined(__GNUC__))
 #if defined(POSIX_TYPES) || defined(SVR4) || defined(HPUX)
@@ -1348,6 +1364,81 @@ void js_constants_init() {
     SET_CONSTANT("LEVL_TYP", IRONBARS)
     SET_CONSTANT("LEVL_TYP", TREE)
     SET_CONSTANT("LEVL_TYP", ICE)
+
+    /* player property indices (prop.h enum prop_types) */
+    SET_CONSTANT("PROP", FIRE_RES)
+    SET_CONSTANT("PROP", COLD_RES)
+    SET_CONSTANT("PROP", SLEEP_RES)
+    SET_CONSTANT("PROP", DISINT_RES)
+    SET_CONSTANT("PROP", SHOCK_RES)
+    SET_CONSTANT("PROP", POISON_RES)
+    SET_CONSTANT("PROP", ACID_RES)
+    SET_CONSTANT("PROP", STONE_RES)
+    SET_CONSTANT("PROP", DRAIN_RES)
+    SET_CONSTANT("PROP", SICK_RES)
+    SET_CONSTANT("PROP", INVULNERABLE)
+    SET_CONSTANT("PROP", ANTIMAGIC)
+    SET_CONSTANT("PROP", STUNNED)
+    SET_CONSTANT("PROP", CONFUSION)
+    SET_CONSTANT("PROP", BLINDED)
+    SET_CONSTANT("PROP", DEAF)
+    SET_CONSTANT("PROP", SICK)
+    SET_CONSTANT("PROP", STONED)
+    SET_CONSTANT("PROP", STRANGLED)
+    SET_CONSTANT("PROP", VOMITING)
+    SET_CONSTANT("PROP", GLIB)
+    SET_CONSTANT("PROP", SLIMED)
+    SET_CONSTANT("PROP", HALLUC)
+    SET_CONSTANT("PROP", HALLUC_RES)
+    SET_CONSTANT("PROP", FUMBLING)
+    SET_CONSTANT("PROP", WOUNDED_LEGS)
+    SET_CONSTANT("PROP", SLEEPY)
+    SET_CONSTANT("PROP", HUNGER)
+    SET_CONSTANT("PROP", SEE_INVIS)
+    SET_CONSTANT("PROP", TELEPAT)
+    SET_CONSTANT("PROP", WARNING)
+    SET_CONSTANT("PROP", WARN_OF_MON)
+    SET_CONSTANT("PROP", WARN_UNDEAD)
+    SET_CONSTANT("PROP", SEARCHING)
+    SET_CONSTANT("PROP", CLAIRVOYANT)
+    SET_CONSTANT("PROP", INFRAVISION)
+    SET_CONSTANT("PROP", DETECT_MONSTERS)
+    SET_CONSTANT("PROP", ADORNED)
+    SET_CONSTANT("PROP", INVIS)
+    SET_CONSTANT("PROP", DISPLACED)
+    SET_CONSTANT("PROP", STEALTH)
+    SET_CONSTANT("PROP", AGGRAVATE_MONSTER)
+    SET_CONSTANT("PROP", CONFLICT)
+    SET_CONSTANT("PROP", JUMPING)
+    SET_CONSTANT("PROP", TELEPORT)
+    SET_CONSTANT("PROP", TELEPORT_CONTROL)
+    SET_CONSTANT("PROP", LEVITATION)
+    SET_CONSTANT("PROP", FLYING)
+    SET_CONSTANT("PROP", WWALKING)
+    SET_CONSTANT("PROP", SWIMMING)
+    SET_CONSTANT("PROP", MAGICAL_BREATHING)
+    SET_CONSTANT("PROP", PASSES_WALLS)
+    SET_CONSTANT("PROP", SLOW_DIGESTION)
+    SET_CONSTANT("PROP", HALF_SPDAM)
+    SET_CONSTANT("PROP", HALF_PHDAM)
+    SET_CONSTANT("PROP", REGENERATION)
+    SET_CONSTANT("PROP", ENERGY_REGENERATION)
+    SET_CONSTANT("PROP", PROTECTION)
+    SET_CONSTANT("PROP", PROT_FROM_SHAPE_CHANGERS)
+    SET_CONSTANT("PROP", POLYMORPH)
+    SET_CONSTANT("PROP", POLYMORPH_CONTROL)
+    SET_CONSTANT("PROP", UNCHANGING)
+    SET_CONSTANT("PROP", FAST)
+    SET_CONSTANT("PROP", REFLECTING)
+    SET_CONSTANT("PROP", FREE_ACTION)
+    SET_CONSTANT("PROP", FIXED_ABIL)
+    SET_CONSTANT("PROP", LIFESAVED)
+
+    /* struct prop layout for reading uprops from WASM memory */
+    set_const("PROP_STRUCT", "SIZEOF", sizeof(struct prop));
+    set_const("PROP_STRUCT", "EXTRINSIC", offsetof(struct prop, extrinsic));
+    set_const("PROP_STRUCT", "BLOCKED", offsetof(struct prop, blocked));
+    set_const("PROP_STRUCT", "INTRINSIC", offsetof(struct prop, intrinsic));
 }
 
 /***
