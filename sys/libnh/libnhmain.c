@@ -296,6 +296,21 @@ int x, y;
     return "";
 }
 
+/* Return the unique m_id of the monster at (x,y), or 0 if none.
+ * m_id is a per-game-session unique identifier assigned at creation;
+ * it is never reused, so frontends can use it for stable identity
+ * tracking across turns (object permanence). */
+unsigned
+get_monster_m_id(x, y)
+int x, y;
+{
+    struct monst *mon;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return 0;
+    mon = m_at(x, y);
+    return mon ? mon->m_id : 0;
+}
+
 /* Look up an extended command by name, returning its index in extcmdlist.
  * Returns -1 if not found. */
 int
