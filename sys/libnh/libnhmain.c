@@ -305,6 +305,20 @@ get_monster_givenname(int x, int y)
     return "";
 }
 
+/* Return the unique m_id of the monster at (x,y), or 0 if none.
+ * m_id is a per-game-session unique identifier assigned at creation;
+ * it is never reused, so frontends can use it for stable identity
+ * tracking across turns (object permanence). */
+unsigned
+get_monster_m_id(int x, int y)
+{
+    struct monst *mon;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return 0;
+    mon = m_at(x, y);
+    return mon ? mon->m_id : 0;
+}
+
 /* Look up an extended command by name, returning its index in extcmdlist.
  * Returns -1 if not found. Used by the API to resolve command names to
  * the integer index that shim_get_ext_cmd expects. */
