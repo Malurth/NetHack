@@ -1327,7 +1327,16 @@ get_plname_from_file(
         *eos(plbuf) = '-';
     /* not simple strcpy(); playmode is in the last slot and could (probably
        will) be preceded by NULs */
-    (void) memcpy((genericptr_t) outbuf, (genericptr_t) plbuf, PL_NSIZ_PLUS);
+    if (name_only) {
+        /* When only the name is needed, outbuf may be as small as
+           PL_NSIZ.  Copy just the name portion to avoid overflowing
+           into adjacent memory (e.g. svp.pl_character). */
+        (void) strncpy(outbuf, plbuf, PL_NSIZ - 1);
+        outbuf[PL_NSIZ - 1] = '\0';
+    } else {
+        (void) memcpy((genericptr_t) outbuf, (genericptr_t) plbuf,
+                       PL_NSIZ_PLUS);
+    }
     return;
 }
 
