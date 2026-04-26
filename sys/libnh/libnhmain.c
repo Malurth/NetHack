@@ -237,6 +237,55 @@ get_terrain_map(unsigned char *out_buffer)
     reset_glyphmap(gm_optionchange);
 }
 
+/* Fill out_buffer with glyph data for all floor objects at (x,y).
+ * Buffer layout: 8 bytes per object (glyph:i32 LE, ch:u8, color:u8, pad:u16).
+ * Returns count of objects written. max_count limits output to prevent overflow.
+ * Only returns objects the hero can perceive (at hero's feet, or in sight). */
+int
+get_floor_objects(int x, int y, unsigned char *out_buffer, int max_count)
+{
+    struct obj *obj;
+    int count = 0;
+    glyph_info ginfo = nul_glyphinfo;
+    int glyph;
+    boolean prev_use_color;
+
+    if (!out_buffer || max_count <= 0)
+        return 0;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return 0;
+    if (covers_objects(x, y))
+        return 0;
+    /* Hero always knows items at own feet; otherwise need vision */
+    if (!(u.ux == x && u.uy == y) && !cansee(x, y))
+        return 0;
+
+    prev_use_color = iflags.use_color;
+    iflags.use_color = TRUE;
+    reset_glyphmap(gm_optionchange);
+
+    for (obj = svl.level.objects[x][y]; obj && count < max_count;
+         obj = obj->nexthere) {
+        int idx = count * 8;
+        glyph = obj_to_glyph(obj, rn2);
+        map_glyphinfo(x, y, glyph, 0, &ginfo);
+
+        out_buffer[idx]     = (unsigned char)(glyph & 0xFF);
+        out_buffer[idx + 1] = (unsigned char)((glyph >> 8) & 0xFF);
+        out_buffer[idx + 2] = (unsigned char)((glyph >> 16) & 0xFF);
+        out_buffer[idx + 3] = (unsigned char)((glyph >> 24) & 0xFF);
+        out_buffer[idx + 4] = (unsigned char)(ginfo.ttychar & 0xFF);
+        out_buffer[idx + 5] = (unsigned char)(ginfo.gm.sym.color & 0xFF);
+        out_buffer[idx + 6] = 0;
+        out_buffer[idx + 7] = 0;
+        count++;
+    }
+
+    iflags.use_color = prev_use_color;
+    reset_glyphmap(gm_optionchange);
+    return count;
+}
+
 /* Return the clean screen description for position (x,y).
  * Calls do_screen_description() and returns the firstmatch string —
  * the same unambiguous description that auto_describe() displays.
