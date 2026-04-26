@@ -225,6 +225,55 @@ unsigned char *out_buffer;
     iflags.use_color = saved;
 }
 
+/* Fill out_buffer with glyph data for all floor objects at (x,y).
+ * Buffer layout: 8 bytes per object (glyph:i32 LE, ch:u8, color:u8, pad:u16).
+ * Returns count of objects written. max_count limits output to prevent overflow.
+ * Only returns objects the hero can perceive (at hero's feet, or in sight). */
+int
+get_floor_objects(x, y, out_buffer, max_count)
+int x, y, max_count;
+unsigned char *out_buffer;
+{
+    struct obj *obj;
+    int count = 0;
+    int glyph, ch, color;
+    unsigned special;
+    boolean saved;
+
+    if (!out_buffer || max_count <= 0)
+        return 0;
+    if (x < 0 || x >= COLNO || y < 0 || y >= ROWNO)
+        return 0;
+    if (covers_objects(x, y))
+        return 0;
+    /* Hero always knows items at own feet; otherwise need vision */
+    if (!(u.ux == x && u.uy == y) && !cansee(x, y))
+        return 0;
+
+    saved = iflags.use_color;
+    iflags.use_color = TRUE;
+
+    for (obj = level.objects[x][y]; obj && count < max_count;
+         obj = obj->nexthere) {
+        int idx = count * 8;
+        glyph = obj_to_glyph(obj, rn2);
+        mapglyph(glyph, &ch, &color, &special, x, y, 0);
+
+        out_buffer[idx]     = (unsigned char)(glyph & 0xFF);
+        out_buffer[idx + 1] = (unsigned char)((glyph >> 8) & 0xFF);
+        out_buffer[idx + 2] = (unsigned char)((glyph >> 16) & 0xFF);
+        out_buffer[idx + 3] = (unsigned char)((glyph >> 24) & 0xFF);
+        out_buffer[idx + 4] = (unsigned char)(ch & 0xFF);
+        out_buffer[idx + 5] = (unsigned char)(color & 0xFF);
+        out_buffer[idx + 6] = 0;
+        out_buffer[idx + 7] = 0;
+        count++;
+    }
+
+    iflags.use_color = saved;
+    return count;
+}
+
 /* Return the clean screen description for position (x,y).
  * Calls do_screen_description() and returns the firstmatch string —
  * the same unambiguous description that auto_describe() displays.
