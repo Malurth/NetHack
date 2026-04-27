@@ -274,6 +274,67 @@ unsigned char *out_buffer;
     return count;
 }
 
+/* Fill out_buffer with remembered object glyphs for tiles the hero
+ * can no longer see.  These are items the hero previously observed
+ * but that are now out of line-of-sight.
+ * Buffer layout per item: 8 bytes
+ *   [0-3] glyph  (i32 LE)
+ *   [4]   ch     (u8 — display character)
+ *   [5]   color  (u8)
+ *   [6]   x      (u8)
+ *   [7]   y      (u8)
+ * Returns count of items written.  max_count prevents overflow. */
+int
+get_remembered_items(out_buffer, max_count)
+unsigned char *out_buffer;
+int max_count;
+{
+    int x, y, count = 0;
+    int glyph, ch, color;
+    unsigned special;
+    boolean saved;
+
+    if (!out_buffer || max_count <= 0)
+        return 0;
+
+    saved = iflags.use_color;
+    iflags.use_color = TRUE;
+
+    for (y = 0; y < ROWNO && count < max_count; y++) {
+        for (x = 1; x < COLNO && count < max_count; x++) {
+            /* Skip tiles the hero can currently see —
+             * those are handled by get_floor_objects. */
+            if (cansee(x, y))
+                continue;
+            /* Skip hero's own position */
+            if (x == u.ux && y == u.uy)
+                continue;
+
+            glyph = levl[x][y].glyph;
+            if (!glyph_is_object(glyph))
+                continue;
+
+            {
+                int idx = count * 8;
+                mapglyph(glyph, &ch, &color, &special, x, y, 0);
+
+                out_buffer[idx]     = (unsigned char)(glyph & 0xFF);
+                out_buffer[idx + 1] = (unsigned char)((glyph >> 8) & 0xFF);
+                out_buffer[idx + 2] = (unsigned char)((glyph >> 16) & 0xFF);
+                out_buffer[idx + 3] = (unsigned char)((glyph >> 24) & 0xFF);
+                out_buffer[idx + 4] = (unsigned char)(ch & 0xFF);
+                out_buffer[idx + 5] = (unsigned char)(color & 0xFF);
+                out_buffer[idx + 6] = (unsigned char)(x & 0xFF);
+                out_buffer[idx + 7] = (unsigned char)(y & 0xFF);
+                count++;
+            }
+        }
+    }
+
+    iflags.use_color = saved;
+    return count;
+}
+
 /* Return the clean screen description for position (x,y).
  * Calls do_screen_description() and returns the firstmatch string —
  * the same unambiguous description that auto_describe() displays.
