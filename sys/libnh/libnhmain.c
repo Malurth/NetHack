@@ -286,16 +286,47 @@ get_floor_objects(int x, int y, unsigned char *out_buffer, int max_count)
     return count;
 }
 
-/* Fill out_buffer with remembered object glyphs for tiles the hero
- * can no longer see.  These are items the hero previously observed
- * but that are now out of line-of-sight.
- * Buffer layout per item: 8 bytes
+/* True if glyph is "boring" terrain that shouldn't appear in a legend
+ * (stone, walls, plain floor, corridors, engravings, air, cloud). */
+static boolean
+is_boring_cmap(int glyph)
+{
+    /* Compare against known uninteresting glyphs. cmap_to_glyph()
+     * returns the main-variant glyph which is all that levl[].glyph
+     * ever stores, so this works even with 3.7's per-branch variants. */
+    return glyph == cmap_to_glyph(S_stone)
+        || glyph == cmap_to_glyph(S_vwall)
+        || glyph == cmap_to_glyph(S_hwall)
+        || glyph == cmap_to_glyph(S_tlcorn)
+        || glyph == cmap_to_glyph(S_trcorn)
+        || glyph == cmap_to_glyph(S_blcorn)
+        || glyph == cmap_to_glyph(S_brcorn)
+        || glyph == cmap_to_glyph(S_crwall)
+        || glyph == cmap_to_glyph(S_tuwall)
+        || glyph == cmap_to_glyph(S_tdwall)
+        || glyph == cmap_to_glyph(S_tlwall)
+        || glyph == cmap_to_glyph(S_trwall)
+        || glyph == cmap_to_glyph(S_room)
+        || glyph == cmap_to_glyph(S_darkroom)
+        || glyph == cmap_to_glyph(S_corr)
+        || glyph == cmap_to_glyph(S_litcorr)
+        || glyph == cmap_to_glyph(S_engroom)
+        || glyph == cmap_to_glyph(S_engrcorr)
+        || glyph == cmap_to_glyph(S_air)
+        || glyph == cmap_to_glyph(S_cloud);
+}
+
+/* Fill out_buffer with remembered glyphs for tiles the hero can no
+ * longer see.  Includes objects, traps, and interesting map features
+ * (doors, stairs, altars, fountains, etc.) — but not boring terrain
+ * like walls, floors, and corridors.
+ * Buffer layout per entry: 8 bytes
  *   [0-3] glyph  (i32 LE)
  *   [4]   ch     (u8 — display character)
  *   [5]   color  (u8)
  *   [6]   x      (u8)
  *   [7]   y      (u8)
- * Returns count of items written.  max_count prevents overflow. */
+ * Returns count of entries written.  max_count prevents overflow. */
 int
 get_remembered_items(unsigned char *out_buffer, int max_count)
 {
@@ -314,7 +345,7 @@ get_remembered_items(unsigned char *out_buffer, int max_count)
     for (y = 0; y < ROWNO && count < max_count; y++) {
         for (x = 1; x < COLNO && count < max_count; x++) {
             /* Skip tiles the hero can currently see —
-             * those are handled by get_floor_objects. */
+             * those are handled by get_floor_objects / live glyph. */
             if (cansee(x, y))
                 continue;
             /* Skip hero's own position */
@@ -322,7 +353,13 @@ get_remembered_items(unsigned char *out_buffer, int max_count)
                 continue;
 
             glyph = levl[x][y].glyph;
-            if (!glyph_is_object(glyph))
+
+            /* Include objects, traps, and interesting cmap features.
+             * Skip monsters (they move — stale data), boring terrain,
+             * and effect glyphs (beams, explosions, swallows). */
+            if (!glyph_is_object(glyph)
+                && !glyph_is_trap(glyph)
+                && !(glyph_is_cmap(glyph) && !is_boring_cmap(glyph)))
                 continue;
 
             {
@@ -1552,6 +1589,10 @@ void js_constants_init() {
     SET_CONSTANT("GLYPH", GLYPH_SWALLOW_OFF);
     SET_CONSTANT("GLYPH", GLYPH_WARNING_OFF);
     SET_CONSTANT("GLYPH", GLYPH_STATUE_OFF);
+    SET_CONSTANT("GLYPH", GLYPH_OBJ_PILETOP_OFF);
+    SET_CONSTANT("GLYPH", GLYPH_BODY_PILETOP_OFF);
+    SET_CONSTANT("GLYPH", GLYPH_STATUE_MALE_PILETOP_OFF);
+    SET_CONSTANT("GLYPH", GLYPH_STATUE_FEM_PILETOP_OFF);
     SET_CONSTANT("GLYPH", GLYPH_UNEXPLORED_OFF);
     SET_CONSTANT("GLYPH", GLYPH_NOTHING_OFF);
     SET_CONSTANT("GLYPH", MAX_GLYPH);
