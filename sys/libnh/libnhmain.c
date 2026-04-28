@@ -226,7 +226,15 @@ unsigned char *out_buffer;
 }
 
 /* Fill out_buffer with glyph data for all floor objects at (x,y).
- * Buffer layout: 8 bytes per object (glyph:i32 LE, ch:u8, color:u8, pad:u16).
+ * Buffer layout: 80 bytes per object
+ *   [0-3]   glyph   (i32 LE)
+ *   [4]     ch      (u8 — display character)
+ *   [5]     color   (u8)
+ *   [6]     dknown  (u8 — 1 if player has examined up close, 0 otherwise)
+ *   [7]     pad     (u8, zero — reserved for future flags)
+ *   [8-11]  o_id    (u32 LE — unique object identity, never reused)
+ *   [12-79] name    (null-terminated string — player-perceived item name
+ *                     via distant_name(obj, doname); respects dknown)
  * Returns count of objects written. max_count limits output to prevent overflow.
  * Only returns objects the hero can perceive (at hero's feet, or in sight). */
 int
@@ -239,6 +247,8 @@ unsigned char *out_buffer;
     int glyph, ch, color;
     unsigned special;
     boolean saved;
+    const char *name;
+    int namelen;
 
     if (!out_buffer || max_count <= 0)
         return 0;
@@ -255,7 +265,8 @@ unsigned char *out_buffer;
 
     for (obj = level.objects[x][y]; obj && count < max_count;
          obj = obj->nexthere) {
-        int idx = count * 8;
+        int idx = count * 80;
+        unsigned oid = obj->o_id;
         glyph = obj_to_glyph(obj, rn2);
         mapglyph(glyph, &ch, &color, &special, x, y, 0);
 
@@ -265,8 +276,21 @@ unsigned char *out_buffer;
         out_buffer[idx + 3] = (unsigned char)((glyph >> 24) & 0xFF);
         out_buffer[idx + 4] = (unsigned char)(ch & 0xFF);
         out_buffer[idx + 5] = (unsigned char)(color & 0xFF);
-        out_buffer[idx + 6] = 0;
+        out_buffer[idx + 6] = (unsigned char)(obj->dknown ? 1 : 0);
         out_buffer[idx + 7] = 0;
+        out_buffer[idx + 8]  = (unsigned char)(oid & 0xFF);
+        out_buffer[idx + 9]  = (unsigned char)((oid >> 8) & 0xFF);
+        out_buffer[idx + 10] = (unsigned char)((oid >> 16) & 0xFF);
+        out_buffer[idx + 11] = (unsigned char)((oid >> 24) & 0xFF);
+
+        /* Item name as the player perceives it (respects dknown).
+         * distant_name avoids setting dknown as a side effect. */
+        name = distant_name(obj, doname);
+        namelen = (int)strlen(name);
+        if (namelen > 67) namelen = 67; /* 80 - 12 - 1 for null */
+        memcpy(out_buffer + idx + 12, name, namelen);
+        out_buffer[idx + 12 + namelen] = '\0';
+
         count++;
     }
 
